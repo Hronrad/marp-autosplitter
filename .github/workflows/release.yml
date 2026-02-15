@@ -15,20 +15,17 @@ jobs:
           - os: windows-latest
             artifact_name: Marp-Web-Client-Windows.exe
             separator: ';'
-            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-win-x64.zip'
-            dl_type: 'zip'
+            marp_pattern: 'win.exe'
             bin_path: 'bin/windows'
           - os: macos-latest
             artifact_name: Marp-Web-Client-macOS
             separator: ':'
-            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-mac-x64.tar.gz'
-            dl_type: 'tar'
+            marp_pattern: 'mac.tar.gz'
             bin_path: 'bin/macos'
           - os: ubuntu-latest
             artifact_name: Marp-Web-Client-Linux
             separator: ':'
-            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-linux-x64.tar.gz'
-            dl_type: 'tar'
+            marp_pattern: 'linux.tar.gz'
             bin_path: 'bin/linux'
 
     steps:
@@ -38,7 +35,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: |
@@ -46,20 +43,29 @@ jobs:
           pip install pyinstaller playwright gradio
 
       - name: Download and Extract Marp CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         shell: bash
         run: |
           mkdir -p ${{ matrix.bin_path }}
-          curl -L -o marp_temp.${{ matrix.dl_type }} ${{ matrix.marp_url }}
-          if [ "${{ matrix.dl_type }}" == "zip" ]; then
-            unzip marp_temp.zip -d ${{ matrix.bin_path }}
+          
+
+          gh release download -R marp-team/marp-cli -p "*${{ matrix.marp_pattern }}"
+          
+
+          DOWNLOADED_FILE=$(ls *${{ matrix.marp_pattern }} | head -n 1)
+          
+
+          if [[ "${{ matrix.marp_pattern }}" == *"tar.gz" ]]; then
+            tar -xzf $DOWNLOADED_FILE -C ${{ matrix.bin_path }}
+            rm $DOWNLOADED_FILE
           else
-            tar -xzf marp_temp.tar -C ${{ matrix.bin_path }}
+
+            mv $DOWNLOADED_FILE ${{ matrix.bin_path }}/marp.exe
           fi
-          rm marp_temp.${{ matrix.dl_type }}
 
       - name: Build with PyInstaller
-
         run: |
           pyinstaller --onefile --name ${{ matrix.artifact_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio web_app.py
 
