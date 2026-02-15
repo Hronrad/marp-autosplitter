@@ -1,0 +1,71 @@
+name: Build and Release Web Client
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: Marp-Web-Client-Windows.exe
+            separator: ';'
+            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-win-x64.zip'
+            dl_type: 'zip'
+            bin_path: 'bin/windows'
+          - os: macos-latest
+            artifact_name: Marp-Web-Client-macOS
+            separator: ':'
+            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-mac-x64.tar.gz'
+            dl_type: 'tar'
+            bin_path: 'bin/macos'
+          - os: ubuntu-latest
+            artifact_name: Marp-Web-Client-Linux
+            separator: ':'
+            marp_url: 'https://github.com/marp-team/marp-cli/releases/download/v3.4.0/marp-cli-v3.4.0-linux-x64.tar.gz'
+            dl_type: 'tar'
+            bin_path: 'bin/linux'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller playwright gradio
+
+      - name: Download and Extract Marp CLI
+
+        shell: bash
+        run: |
+          mkdir -p ${{ matrix.bin_path }}
+          curl -L -o marp_temp.${{ matrix.dl_type }} ${{ matrix.marp_url }}
+          if [ "${{ matrix.dl_type }}" == "zip" ]; then
+            unzip marp_temp.zip -d ${{ matrix.bin_path }}
+          else
+            tar -xzf marp_temp.tar -C ${{ matrix.bin_path }}
+          fi
+          rm marp_temp.${{ matrix.dl_type }}
+
+      - name: Build with PyInstaller
+
+        run: |
+          pyinstaller --onefile --name ${{ matrix.artifact_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio web_app.py
+
+      - name: Upload Artifact to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

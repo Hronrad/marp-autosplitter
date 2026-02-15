@@ -1,0 +1,12 @@
+{
+  "name": "marp-autosplitter",
+  "version": "1.0.0",
+  "description": "Blazing fast Markdown to perfectly paginated PPT",
+  "private": true,
+  "scripts": {
+    "marp": "marp"
+  },
+  "dependencies": {
+    "@marp-team/marp-cli": "^3.4.0"
+  }
+}

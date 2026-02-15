@@ -1,6 +1,6 @@
 import os
 import sys
-import shutil
+import stat
 import asyncio
 import argparse
 import re
@@ -34,11 +34,27 @@ def find_browser_path():
     return None
 
 def find_marp_executable():
-    local_marp_dir = os.path.abspath(os.path.join(os.getcwd(), "node_modules", ".bin"))
-    local_marp = shutil.which("marp", path=local_marp_dir)
-    if local_marp:
-        return local_marp
-    return shutil.which("marp")
+
+
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    if sys.platform == "win32":
+        marp_path = os.path.join(base_path, "bin", "windows", "marp.exe")
+    elif sys.platform == "darwin":
+        marp_path = os.path.join(base_path, "bin", "macos", "marp")
+    else:
+        marp_path = os.path.join(base_path, "bin", "linux", "marp")
+
+    if os.path.exists(marp_path):
+        if sys.platform != "win32":
+            st = os.stat(marp_path)
+            os.chmod(marp_path, st.st_mode | stat.S_IEXEC)
+        return marp_path
+        
+    return None
 
 async def convert_markdown(
     input_file: str, 
@@ -134,6 +150,15 @@ async def convert_markdown(
         await run_marp_async(out_path, fmt.upper())
 
     print("All tasks completed successfully!")
+
+    output_files = [] 
+    for fmt in output_formats:
+        out_path = os.path.join(output_dir, f"{file_base_name}.{fmt}")
+        await run_marp_async(out_path, fmt.upper())
+        if os.path.exists(out_path):
+            output_files.append(out_path)
+    
+    return output_files 
 
 def main():
     parser = argparse.ArgumentParser(description="Marp-Autosplitter: Blazing fast Markdown to perfectly paginated PPT")
