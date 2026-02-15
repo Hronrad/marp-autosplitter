@@ -67,7 +67,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --name ${{ matrix.artifact_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio web_app.py
+          pyinstaller --onefile --name ${{ matrix.artifact_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio web.py
 
       - name: Upload Artifact to Release
         uses: softprops/action-gh-release@v1
