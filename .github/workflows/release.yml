@@ -65,7 +65,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --name ${{ matrix.bin_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio web_app.py
+          pyinstaller --onefile --name ${{ matrix.bin_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio --collect-all safehttpx web_app.py
       
       - name: Compress Executable
         shell: bash
