@@ -265,8 +265,9 @@ class EngineSplitter:
         final_lines = []
         current_page_baseline = 0
         
-        for data in probe_data:
-            idx = data["idx"]
+        for i, data in enumerate(probe_data):
+
+            idx = data["idx"] 
             y_pos = data["y"]
             chunk = chunks[idx]
             
@@ -277,12 +278,17 @@ class EngineSplitter:
                     is_target_heading = True
             
             is_overflow = (y_pos - current_page_baseline) > safe_usable_height
-            is_first_on_page = (idx == 0) or (current_page_baseline == probe_data[idx-1]["y"])
             
+            if i == 0:
+                is_first_on_page = True
+            else:
+                is_first_on_page = (current_page_baseline == probe_data[i-1]["y"])
+                
             if (is_overflow or is_target_heading) and not is_first_on_page:
-                if idx > 0:
+
+                if i > 0:
                     final_lines.append("\n---\n")
-                    current_page_baseline = probe_data[idx-1]["y"] 
+                    current_page_baseline = probe_data[i-1]["y"] 
                     
                     if chunk.get("type") == "table_row":
                         final_lines.append(chunk["header"])
@@ -294,7 +300,9 @@ class EngineSplitter:
                 if chunk.get("blank_before") and len(final_lines) > 0 and final_lines[-1] != "\n---\n":
                     final_lines.append("")
                         
-            final_lines.append(chunk["text"])
+            final_text = chunk["text"]
+        
+            final_lines.append(final_text)
 
         try:
             os.remove(probe_md_file)

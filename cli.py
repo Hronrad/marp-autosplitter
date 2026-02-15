@@ -33,6 +33,14 @@ def find_browser_path():
             return p
     return None
 
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        # frozen env (PyInstaller)
+        return os.path.dirname(os.path.realpath(sys.executable))
+    else:
+        # source code env
+        return os.path.dirname(os.path.abspath(__file__))
+
 def find_marp_executable():
 
 
@@ -102,7 +110,7 @@ async def convert_markdown(
     final_content = re.sub(r'\\\[(.*?)\\\]', r'$$\1$$', final_content, flags=re.DOTALL)
     final_content = re.sub(r'\n{3,}', '\n\n', final_content).strip()
 
-    print(f"🚀 Launching Two-Pass physical layout engine (Theme: {theme}, Split Level: H{heading_split_levels}) ...")
+    print(f"🚀 Launching Two-Pass physical layout engine (Theme: {theme}, Split Level: {heading_split_levels}) ...")
     splitter = EngineSplitter(slide_usable_height=620)
     final_content = await splitter.process(final_content, theme, marp_bin, env, heading_split_levels)
 
@@ -110,8 +118,11 @@ async def convert_markdown(
     header = f"---\nmarp: true\ntheme: {theme}\nclass: {style_class}\npaginate: true\n---\n\n"
     full_markdown = header + final_content
 
-    base_dir = os.path.abspath(os.getcwd())
+
+    base_dir = get_base_dir()
+
     output_dir = os.path.join(base_dir, "output_slides")
+
     os.makedirs(output_dir, exist_ok=True)
     
     file_base_name = os.path.splitext(os.path.basename(input_file))[0]
@@ -145,19 +156,18 @@ async def convert_markdown(
         except Exception as e:
             print(f"❌ Error generating {format_name}: {str(e)}")
 
-    for fmt in output_formats:
-        out_path = os.path.join(output_dir, f"{file_base_name}.{fmt}")
-        await run_marp_async(out_path, fmt.upper())
-
-    print("All tasks completed successfully!")
-
     output_files = [] 
+
     for fmt in output_formats:
+        if fmt == "md":
+            if os.path.exists(md_file):
+                output_files.append(md_file)
+            continue
         out_path = os.path.join(output_dir, f"{file_base_name}.{fmt}")
         await run_marp_async(out_path, fmt.upper())
         if os.path.exists(out_path):
             output_files.append(out_path)
-    
+    print("All tasks completed successfully!")
     return output_files 
 
 def main():
@@ -166,7 +176,7 @@ def main():
     parser.add_argument("-t", "--theme", default="default", help="Select theme (default: default)")
     parser.add_argument("-c", "--class_style", default="", help="Additional CSS class, e.g., lead or invert (default: none)")
     parser.add_argument("-l", "--level", type=int, default=2, help="trigger pagination on the top N actual heading levels (default: 2)")
-    parser.add_argument("-f", "--format", nargs="+", choices=["pptx", "pdf", "html"], default=["pptx", "pdf"], help="Output formats (default: pptx pdf)")
+    parser.add_argument("-f", "--format", nargs="+", choices=["pptx", "pdf", "html", "md"], default=["pptx", "pdf"], help="Output formats (default: pptx pdf)")
     
     args = parser.parse_args()
     

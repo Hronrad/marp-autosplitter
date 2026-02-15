@@ -69,15 +69,19 @@ jobs:
           pyinstaller --onefile --name ${{ matrix.bin_name }} --add-data "bin${{ matrix.separator }}bin" --collect-all gradio --collect-all safehttpx --collect-all groovy --collect-all gradio_client web_app.py
 
 
-      - name: Compress Executable
+      - name: Compress Executable with Themes
         shell: bash
         run: |
+          if [ -d "themes" ]; then
+            cp -r themes dist/
+          fi
+          
           cd dist
           if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            7z a ${{ matrix.archive_name }} ${{ matrix.bin_name }}
+            7z a "${{ matrix.archive_name }}" "${{ matrix.bin_name }}" $([ -d "themes" ] && echo "themes")
           else
-            chmod +x ${{ matrix.bin_name }}
-            tar -czvf ${{ matrix.archive_name }} ${{ matrix.bin_name }}
+            chmod +x "${{ matrix.bin_name }}"
+            tar -czvf "${{ matrix.archive_name }}" "${{ matrix.bin_name }}" $([ -d "themes" ] && echo "themes")
           fi
       
       - name: Upload Artifact to Release
