@@ -5,6 +5,7 @@
 **Marper** 是一个快速、智能的命令行工具，能将任意 Markdown 文档完美转换为排版精美、高度精准的 PPTX 和 PDF 演示文稿。它通过自动切分内容并修复跨页结构，再利用 Marp 转为适合展示的 PPTX 和 PDF 演示文稿。程序确保每一页都美观且信息完整，无论是文本、表格还是 LaTeX 公式，都能得到完美呈现。
 
 **Marper** is a simple, fast, intelligent, and standalone tool designed to flawlessly convert any Markdown document into beautifully formatted, highly precise PPTX and PDF presentations. Powered by a physical-level measurement engine, it automatically paginates lengthy content and smartly repairs cross-page structures. Leveraging Marp under the hood, it ensures every slide is rendered perfectly.
+(English documentation down below)
 
 - [Marp](https://marp.app/)
 
@@ -29,6 +30,10 @@
 ### 1. 图形界面 GUI
 ![GUI](images/gui.png)
 ### 2. 标题分页 Title-Based Pagination
+Marper 支持根据文档中的标题层级自动分页，保持内容逻辑连贯。
+Marper supports automatic pagination based on heading levels in the document, maintaining logical coherence.
+
+
 ![title-based pagination](images/title.png)
 ### 3. 结构保持 Structure Preservation
 如果多层结构被分隔，Marper 会在下一页自动补全缺失的内容层级，保持内容逻辑完整。
