@@ -88,6 +88,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/${{ matrix.archive_name }}
-          prerelease: true
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
